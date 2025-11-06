@@ -1,3 +1,54 @@
+# mcp-api-gateway
+
+## Database migrations
+
+This project uses Umzug (Sequelize) for database migrations. A simple migration runner is included at `scripts/migrate.js`.
+
+Common migration commands (run from project root):
+
+ - Run all pending migrations:
+
+   npm run migrate
+
+ - Rollback all migrations:
+
+   npm run migrate:down
+
+ - Show migration status:
+
+   npm run migrate:status
+
+Migrations will also run automatically on container startup (the container entrypoint executes `scripts/start.sh` which runs migrations and then starts the app).
+
+Environment variable to control migrations at startup:
+
+- `RUN_MIGRATIONS` (default: `true`) — set to `false` to prevent migrations from running when the container starts.
+
+Example (disable migrations):
+
+```
+RUN_MIGRATIONS=false docker compose up -d
+```
+
+To disable migrations using the production compose override file, run:
+
+```
+docker compose -f compose.yml -f compose.prod.yml up -d
+```
+
+Automated tests
+
+Run the migration/seeding verification tests with the standard test command. Set `TEST_DATABASE_URL` to point to a test database to avoid altering your development/production DB:
+
+```
+TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:5432/test_db npm test
+```
+
+The tests check that migrations ran, the expected tables exist, seed data exists, and unique indexes are present.
+
+
+Migrations live in the `migrations/` directory and Sequelize models are in `models/`.
+
 # mcp/api-gateway
 
 [![Build](https://github.com/rflpazini/mcp-api-gateway/actions/workflows/build.yml/badge.svg)](https://github.com/rflpazini/mcp-api-gateway/actions/workflows/build.yml)

@@ -7,6 +7,8 @@ import {
 import SwaggerParser from '@apidevtools/swagger-parser';
 import axios from 'axios';
 
+import { initializeDatabase } from './config/database.js';
+
 class APIGatewayMCPServer {
   constructor() {
     this.server = new Server(
@@ -23,6 +25,20 @@ class APIGatewayMCPServer {
     
     this.apis = new Map();
     this.setupHandlers();
+    this.initializeServer();
+  }
+
+  async initializeServer() {
+    try {
+      const dbConnected = await initializeDatabase();
+      if (!dbConnected) {
+        console.error('Failed to initialize database connection');
+        process.exit(1);
+      }
+    } catch (error) {
+      console.error('Error during server initialization:', error);
+      process.exit(1);
+    }
   }
 
   async loadAPIs() {
