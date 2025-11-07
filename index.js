@@ -8,6 +8,7 @@ import SwaggerParser from '@apidevtools/swagger-parser';
 import axios from 'axios';
 
 import { initializeDatabase } from './config/database.js';
+import { VaultClient } from './config/vault.js';
 
 class APIGatewayMCPServer {
   constructor() {
@@ -30,6 +31,51 @@ class APIGatewayMCPServer {
 
   async initializeServer() {
     try {
+      // If Vault is configured, load secrets into process.env before initializing
+      if (process.env.VAULT_ADDR) {
+        try {
+          // Initialize with optional AppRole auth & value masking
+          const vault = new VaultClient({
+            addr: process.env.VAULT_ADDR,
+            // Use AppRole if configured, otherwise fall back to token
+            roleId: process.env.VAULT_ROLE_ID,
+            secretId: process.env.VAULT_SECRET_ID,
+            token: process.env.VAULT_TOKEN,
+            // Enable secret value masking in logs
+            logMasked: process.env.NODE_ENV !== 'development'
+          });
+          
+          if (process.env.VAULT_SECRETS) {
+            let mapping = {};
+            try {
+              mapping = JSON.parse(process.env.VAULT_SECRETS);
+            } catch (e) {
+              // Fallback to comma-separated parser
+              const parts = process.env.VAULT_SECRETS.split(',')
+                .map(s => s.trim())
+                .filter(Boolean);
+              for (const p of parts) {
+                const [envKey, vaultSpec] = p.split('=', 2);
+                if (!envKey || !vaultSpec) continue;
+                mapping[envKey] = vaultSpec;
+              }
+            }
+
+            // Load secrets and merge into process.env
+            const secrets = await vault.loadSecrets(mapping);
+            Object.assign(process.env, secrets);
+            console.log('Loaded secrets from Vault into environment');
+          }
+        } catch (err) {
+          console.error('Failed to load secrets from Vault:', err.message || err);
+          if (err.errors) {
+            err.errors.forEach(e => console.error(' -', e));
+          }
+          // Fail fast in production if Vault is required
+          if (process.env.VAULT_REQUIRED === 'true') process.exit(1);
+        }
+      }
+
       const dbConnected = await initializeDatabase();
       if (!dbConnected) {
         console.error('Failed to initialize database connection');

@@ -1,0 +1,53 @@
+version: '3.8'
+
+x-scout-settings: &scout-settings
+  labels:
+    - "com.docker.scout.enable=true"
+    - "com.docker.scout.policy=development"
+
+services:
+  app:
+    <<: *scout-settings
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      args:
+        NODE_ENV: development
+    environment:
+      - NODE_ENV=development
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    networks:
+      - mcp_dev_net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+
+  db:
+    <<: *scout-settings
+    image: supabase/postgres:15.1.0.117
+    environment:
+      - POSTGRES_PASSWORD=dev_password
+    networks:
+      - mcp_dev_net
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+
+networks:
+  mcp_dev_net:
+    driver: bridge
+    enable_ipv6: false
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.28.0.0/16
+    labels:
+      - "com.docker.scout.monitor=true"
+
+volumes:
+  postgres_dev_data:

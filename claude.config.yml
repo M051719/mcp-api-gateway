@@ -1,0 +1,113 @@
+# Development configuration for Claude integration
+development:
+  models:
+    claude-sonnet-4-20250514:
+      max_tokens: 1024
+      temperature: 0.7
+      top_p: 0.9
+      logging:
+        level: debug
+        request_tracking: true
+      rate_limits:
+        requests_per_minute: 100
+        tokens_per_minute: 50000
+    claude-3-opus-20240229:
+      max_tokens: 4096
+      temperature: 0.5
+      top_p: 0.95
+      logging:
+        level: debug
+        request_tracking: true
+      rate_limits:
+        requests_per_minute: 50
+        tokens_per_minute: 100000
+  security:
+    api_key_source: env
+    tls_verify: true
+    allowed_origins:
+      - http://localhost:3000
+      - http://localhost:8000
+    cors:
+      enabled: true
+      methods:
+        - GET
+        - POST
+    rate_limiting:
+      enabled: true
+      default_limit: 100
+    error_reporting:
+      stack_traces: true
+      detailed_errors: true
+
+# Production configuration for Claude integration
+production:
+  models:
+    claude-sonnet-4-20250514:
+      max_tokens: 1024
+      temperature: 0.7
+      top_p: 0.9
+      logging:
+        level: info
+        request_tracking: true
+      rate_limits:
+        requests_per_minute: 500
+        tokens_per_minute: 200000
+    claude-3-opus-20240229:
+      max_tokens: 4096
+      temperature: 0.5
+      top_p: 0.95
+      logging:
+        level: info
+        request_tracking: true
+      rate_limits:
+        requests_per_minute: 200
+        tokens_per_minute: 400000
+  security:
+    api_key_source: docker_secret
+    tls_verify: true
+    allowed_origins:
+      - https://api.yourdomain.com
+    cors:
+      enabled: true
+      methods:
+        - GET
+        - POST
+      allowed_headers:
+        - Authorization
+        - Content-Type
+      exposed_headers:
+        - X-RateLimit-Limit
+        - X-RateLimit-Remaining
+    rate_limiting:
+      enabled: true
+      default_limit: 1000
+      sliding_window: true
+    error_reporting:
+      stack_traces: false
+      detailed_errors: false
+    network_policies:
+      ingress:
+        allowed_ips:
+          - your.load.balancer.ip
+        allowed_ports:
+          - 443
+      egress:
+        allowed_endpoints:
+          - api.anthropic.com
+        allowed_ports:
+          - 443
+    monitoring:
+      prometheus:
+        enabled: true
+        metrics:
+          - request_duration_seconds
+          - tokens_used_total
+          - requests_total
+          - errors_total
+      alerts:
+        error_rate:
+          threshold: 5
+          window: 5m
+        response_time:
+          threshold: 2000
+          window: 1m

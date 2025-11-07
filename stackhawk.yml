@@ -1,0 +1,33 @@
+# Basic application configuration
+app:
+  applicationId: "00000000-0000-0000-0000-000000000000" # Replace with actual UUID
+  env: ${STACKHAWK_ENVIRONMENT:development}
+  host: ${HAWK_HOST:http://localhost:3000}
+
+# Authentication configuration
+auth:
+  name: "API Login"
+  type: "FORM"
+  testPath: "/api/v1/user/profile" # Path that requires auth
+  tokenExtraction:
+    type: "REGEX"
+    value: "\"token\"\\s*:\\s*\"([^\"]+)\""
+  credentials:
+    username: ${STACKHAWK_TEST_EMAIL:test@repmotivatedseller.org}
+    password: ${STACKHAWK_TEST_PASSWORD:SecureTestPassword123!}
+  loginPath:
+    type: "POST"
+    url: "/api/auth/login"
+    usernameField: "email"
+    passwordField: "password"
+
+# Scan configuration
+hawk:
+  spider:
+    base: false
+    maxDurationMinutes: 10
+  failureThreshold: HIGH
+
+# API paths to scan
+openapi:
+  path: /api/v1/openapi.json

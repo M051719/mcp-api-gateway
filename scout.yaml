@@ -1,0 +1,54 @@
+version: 1
+policies:
+  # Security policies
+  security:
+    - name: no-critical-vulnerabilities
+      description: Block images with critical security vulnerabilities
+      threshold:
+        severity: critical
+        status: block
+    - name: no-high-vulnerabilities
+      description: Warn on images with high security vulnerabilities
+      threshold:
+        severity: high
+        status: warn
+    - name: root-user
+      description: Prevent running as root
+      rules:
+        - type: dockerfile
+          rule: user != root
+
+  # Base image policies
+  base_images:
+    - name: approved-base-images
+      description: Only allow approved base images
+      rules:
+        - type: dockerfile
+          rule: FROM node:*-alpine
+
+  # Package policies
+  packages:
+    - name: approved-packages
+      description: Only allow approved packages
+      rules:
+        - type: npm
+          rule: dependencies.@anthropic-ai/sdk.version >= 0.14.0
+
+  # Network policies
+  network:
+    - name: secure-networking
+      description: Enforce secure networking practices
+      rules:
+        - type: dockerfile
+          rule: EXPOSE !~ /.*22.*/ # No SSH ports
+
+# Scanning configuration
+scanning:
+  threshold: high
+  ignore:
+    vulnerabilities:
+      - GHSA-fake-id # Example of ignoring a specific vulnerability
+  categories:
+    - vuln
+    - secret
+    - configuration

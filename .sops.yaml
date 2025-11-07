@@ -1,0 +1,8 @@
+# Template .sops.yaml - configure according to your KMS provider
+creation_rules:
+  - kms: [] # e.g. ["arn:aws:kms:us-east-1:123456:key/abcd..."]
+    gcp_kms: []
+    azure_keyvault: []
+    encrypted_regex: '^(data|stringData)$'
+    path_regex: '\.env.*|secrets/.*\.ya?ml$'
+    unencrypted_suffix: _unencrypted
