@@ -1,0 +1,110 @@
+name: Database Health Check
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'migrations/**'
+      - 'scripts/**'
+      - '.github/workflows/**'
+  workflow_dispatch:
+
+jobs:
+  check-pg-cron:
+    name: Check pg_cron table size
+    runs-on: ubuntu-latest
+    
+    env:
+      MAX_JOB_RUN_DETAILS: 1000000  # Fail if more than 1M rows
+      STAGING_DB_URL: ${{ secrets.STAGING_DB_URL }}
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+      
+      - name: Check database health and compatibility
+        run: |
+          # Create output dir
+          mkdir -p tmp/upgrade_report
+          
+          # Check pg_cron table size
+          echo "Checking pg_cron table size..."
+          echo "SELECT count(*) as row_count FROM cron.job_run_details;" | \
+            psql "$STAGING_DB_URL" -t -A > tmp/row_count.txt
+          
+          ROW_COUNT=$(cat tmp/row_count.txt)
+          echo "Found ${ROW_COUNT} rows in cron.job_run_details"
+          
+          if [ "$ROW_COUNT" -gt "$MAX_JOB_RUN_DETAILS" ]; then
+            echo "::error::cron.job_run_details has ${ROW_COUNT} rows (max: $MAX_JOB_RUN_DETAILS)"
+            echo "::error::Please archive old records using scripts/archive_pg_cron.sql"
+            exit 1
+          fi
+
+          # Check extension versions
+          echo "Checking extension versions..."
+          cat << 'EOF' | psql "$STAGING_DB_URL" -t -A > tmp/version_check.txt
+          WITH required_versions AS (
+            SELECT 'timescaledb'::text as extname, '2.16.1'::text as min_version
+            UNION ALL
+            SELECT 'plv8', '3.1.10'
+          ), current_versions AS (
+            SELECT e.extname, e.extversion
+            FROM pg_extension e
+            JOIN required_versions r ON e.extname = r.extname
+          )
+          SELECT format(
+            '%s current version: %s (minimum: %s) - %s',
+            r.extname,
+            COALESCE(c.extversion, 'NOT INSTALLED'),
+            r.min_version,
+            CASE 
+              WHEN c.extversion IS NULL THEN 'ERROR: Not installed'
+              WHEN c.extversion::text < r.min_version THEN 'ERROR: Upgrade required'
+              ELSE 'OK'
+            END
+          ) as version_check
+          FROM required_versions r
+          LEFT JOIN current_versions c ON r.extname = c.extname
+          ORDER BY r.extname;
+          EOF
+
+          # Check for any version errors
+          if grep -q "ERROR:" tmp/version_check.txt; then
+            echo "::error::Extension version check failed"
+            cat tmp/version_check.txt
+            exit 1
+          fi
+          
+          # Check for md5 password hashes
+          echo "Checking for md5 password hashes..."
+          cat << 'EOF' | psql "$STAGING_DB_URL" -t -A > tmp/md5_check.txt
+          SELECT rolname 
+          FROM pg_authid 
+          WHERE rolpassword LIKE 'md5%' 
+            AND rolcanlogin = true;
+          EOF
+
+          if [ -s tmp/md5_check.txt ]; then
+            echo "::warning::Found roles using md5 password hashes (should migrate to scram-sha-256):"
+            cat tmp/md5_check.txt
+          fi
+          
+          # Run full extension report for visibility
+          ./scripts/report_extensions.sh
+          
+          # Display report in PR comment
+          echo "Extension Report:" >> $GITHUB_STEP_SUMMARY
+          cat tmp/upgrade_report/extension_report.txt >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload report artifacts
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: db-health-report
+          path: tmp/upgrade_report/
+          retention-days: 14

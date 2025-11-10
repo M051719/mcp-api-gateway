@@ -33,6 +33,8 @@ services:
       - "postgres"
       - "-c"
       - "wal_level=logical"
+      - "-c"
+      - "listen_addresses=*"
 
   kong:
     image: kong:2.8.1
@@ -56,30 +58,45 @@ services:
     environment:
       - PG_META_PORT=8080
       - PG_META_DB_HOST=db
+      - PG_META_DB_PORT=5432
+      - PG_META_DB_NAME=postgres
+      - PG_META_DB_USER=postgres
       - PG_META_DB_PASSWORD=postgres
+      - PG_META_DB_SSL=disable
     ports:
       - "8080:8080"
     depends_on:
       - db
 
-  realtime:
-    image: supabase/realtime:v2.9.3
-    container_name: mcp-supabase-realtime
-    restart: unless-stopped
-    environment:
-      - DB_HOST=db
-      - DB_PORT=5432
-      - DB_USER=postgres
-      - DB_PASSWORD=postgres
-      - DB_NAME=postgres
-      - PORT=4000
-        - JWT_SECRET=your-super-secret-jwt-token
-        - HOSTNAME=localhost
-        - ERLANG_NODE_NAME=realtime@localhost
-    ports:
-      - "4000:4000"
-    depends_on:
-      - db
+  # Temporarily disabled due to v2.9.3 image configuration issues with APP_NAME env var
+  # Can be re-enabled when using a compatible image version or custom build
+  # realtime:
+  #   image: supabase/realtime:v2.9.3
+  #   container_name: mcp-supabase-realtime
+  #   restart: unless-stopped
+  #   environment:
+  #     - APP_NAME=realtime
+  #     - DB_HOST=db
+  #     - DB_PORT=5432
+  #     - DB_USER=postgres
+  #     - DB_PASSWORD=postgres
+  #     - DB_NAME=postgres
+  #     - PORT=4000
+  #     - JWT_SECRET=your-super-secret-jwt-token
+  #     - SECRET_KEY_BASE=EAx3IQ/wRG1v47ZkYCx0xNobMHOBsQqe6GcGPBFLUNKq1U4gSwGMxO4v3Dm8Hgs
+  #     - REPLICATION_MODE=RLS
+  #     - REPLICATION_POLL_INTERVAL=100
+  #     - SECURE_CHANNELS=true
+  #     - SLOT_NAME=supabase_realtime_rls
+  #     - TEMPORARY_SLOT=true
+  #     - DB_SSL=false
+  #     - HOSTNAME=127.0.0.1
+  #     - ERLANG_COOKIE=supersecretcookie
+  #     - ERL_AFLAGS=-proto_dist inet_tcp -name realtime@127.0.0.1
+  #   ports:
+  #     - "4000:4000"
+  #   depends_on:
+  #     - db
 
 volumes:
   postgres_data:

@@ -7,20 +7,24 @@ if (-not $env:DATABASE_URL) {
     exit 2
 }
 
-$OutDir = Join-Path -Path __PSScriptRoot -ChildPath '..\tmp\upgrade_report' | Resolve-Path -LiteralPath
+$OutDir = Join-Path -Path $PSScriptRoot -ChildPath '..\tmp\upgrade_report'
 New-Item -ItemType Directory -Path $OutDir -Force | Out-Null
+$OutDir = Resolve-Path -LiteralPath $OutDir
 
 Write-Host "Running extension & reg* inventory..."
 $reportPath = Join-Path $OutDir 'extension_report.txt'
-psql $env:DATABASE_URL -v ON_ERROR_STOP=1 -f scripts/check_extensions.sql | Out-File -FilePath $reportPath -Encoding utf8
+$sqlFile = Join-Path $PSScriptRoot 'check_extensions.sql'
+psql "$env:DATABASE_URL" -v ON_ERROR_STOP=1 -f "$sqlFile" | Out-File -FilePath $reportPath -Encoding utf8
 Write-Host "Report written to $reportPath"
 
 # Try to export a small sample of cron.job_run_details
 $sampleCsv = Join-Path $OutDir 'cron_job_run_details_sample.csv'
 try {
-    psql $env:DATABASE_URL -c "\copy (SELECT * FROM cron.job_run_details LIMIT 100) TO '$sampleCsv' CSV HEADER"
+    $copyCmd = "\copy (SELECT * FROM cron.job_run_details LIMIT 100) TO '$sampleCsv' CSV HEADER"
+    psql "$env:DATABASE_URL" -c $copyCmd
     Write-Host "Sample export saved to $sampleCsv"
-} catch {
+}
+catch {
     Write-Host "cron schema or table not present or export failed: $_"
 }
 

@@ -185,6 +185,16 @@ class APIGatewayMCPServer {
           }
         }
       });
+
+      // Database health tool
+      tools.push({
+        name: 'db_health',
+        description: 'Get database health info (connection, version, extensions)',
+        inputSchema: {
+          type: 'object',
+          properties: {}
+        }
+      });
       
       // Add dynamic tools for each API endpoint
       for (const [apiName, apiData] of this.apis) {
@@ -232,6 +242,8 @@ class APIGatewayMCPServer {
           return await this.getAPIInfo(args);
         } else if (name === 'execute_api') {
           return await this.executeAPI(args);
+        } else if (name === 'db_health') {
+          return await this.dbHealth();
         } else if (name.includes('_')) {
           return await this.executeDynamicTool(name, args);
         }
@@ -408,6 +420,31 @@ class APIGatewayMCPServer {
     const transport = new StdioServerTransport();
     await this.server.connect(transport);
     console.error('MCP API Gateway Server running...');
+  }
+
+  async dbHealth() {
+    try {
+      const { default: sequelize } = await import('./config/database.js');
+      // Basic checks
+      const [versionResult] = await sequelize.query('SELECT version()');
+      const [nowResult] = await sequelize.query('SELECT now() as server_time');
+      // Extensions (best effort)
+      let extensions = [];
+      try {
+        const [extRows] = await sequelize.query("SELECT extname, extversion FROM pg_extension ORDER BY 1");
+        extensions = extRows;
+      } catch {}
+
+      const payload = {
+        connected: true,
+        version: versionResult?.[0]?.version || null,
+        server_time: nowResult?.[0]?.server_time || null,
+        extensions
+      };
+      return { content: [{ type: 'text', text: JSON.stringify(payload, null, 2) }] };
+    } catch (err) {
+      return { content: [{ type: 'text', text: `DB health check failed: ${err.message}` }] };
+    }
   }
 }
 

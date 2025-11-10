@@ -1,13 +1,15 @@
 import test from 'node:test';
 import { strict as assert } from 'assert';
 import { Client } from 'pg';
+import { resolveDatabaseUrl, sanitizeForLog } from '../config/resolveDbUrl.js';
 
-const dbUrl = process.env.TEST_DATABASE_URL || process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/postgres';
+const dbUrl = resolveDatabaseUrl(process.env);
+console.log('[TEST DB] Using connection:', sanitizeForLog(dbUrl));
 
 let client;
 
 test.before(async () => {
-  client = new Client({ connectionString: dbUrl });
+  client = new Client({ connectionString: dbUrl, ssl: /supabase\.co/.test(dbUrl) ? { rejectUnauthorized: false } : undefined });
   await client.connect();
 });
 
