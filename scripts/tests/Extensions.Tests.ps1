@@ -4,9 +4,13 @@ param(
     [string]$DatabaseUrl = 'postgresql://postgres:postgres@localhost:5432/postgres'
 )
 
-BeforeAll {
-    . "$PSScriptRoot/common/database-helpers.ps1"
+$ErrorActionPreference = 'Stop'
+# Explicitly dot-source helper with resolved path for Pester run contexts
+$helpersPath = Join-Path $PSScriptRoot 'common' 'database-helpers.ps1'
+if (-not (Test-Path $helpersPath)) {
+    throw "Helpers file not found: $helpersPath"
 }
+. $helpersPath
 
 Describe 'Extension Upgrade Prerequisites' {
     It 'TimescaleDB should be installed or absent gracefully' {
@@ -43,7 +47,10 @@ Describe 'Hypertable Metadata Snapshot (TimescaleDB optional)' {
 Describe 'plv8 Function Snapshot (optional)' {
     It 'Captures plv8 function list (zero or more)' {
         $sql = @"
-SELECT count(*) FROM pg_proc p JOIN pg_language l ON p.prolang = l.oid WHERE l.lanname='plv8';
+SELECT count(*) 
+FROM pg_proc p 
+JOIN pg_language l ON p.prolang = l.oid 
+WHERE l.lanname='plv8';
 "@
         $res = Invoke-PostgresQuery -DatabaseUrl $DatabaseUrl -Sql $sql
         ($res -match '^[0-9]+$') | Should -BeTrue

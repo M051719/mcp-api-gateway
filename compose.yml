@@ -18,7 +18,7 @@ services:
       - kong
 
   db:
-    image: supabase/postgres:15.1.0.117
+    image: supabase/postgres:17.6.1.044
     container_name: mcp-supabase-db
     restart: unless-stopped
     environment:
@@ -29,12 +29,17 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - wal_archive:/wal_archive
     command:
       - "postgres"
       - "-c"
       - "wal_level=logical"
       - "-c"
       - "listen_addresses=*"
+      - "-c"
+      - "archive_mode=on"
+      - "-c"
+      - "archive_command=test ! -f /wal_archive/%f && cp %p /wal_archive/%f"
 
   kong:
     image: kong:2.8.1
@@ -100,3 +105,7 @@ services:
 
 volumes:
   postgres_data:
+  wal_archive:
+
+
+

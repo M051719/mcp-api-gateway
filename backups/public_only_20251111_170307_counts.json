@@ -1,0 +1,14 @@
+{
+  "timestamp": "20251111_170307",
+  "database": "postgres",
+  "schema": "public",
+  "tables": 5,
+  "totalRows": 8,
+  "counts": {
+    "public.apis": 0,
+    "public.api_keys": 0,
+    "public.umzug_migrations": 8,
+    "public.users": 0,
+    "public.usage_logs": 0
+  }
+}

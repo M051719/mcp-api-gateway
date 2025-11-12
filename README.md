@@ -281,3 +281,282 @@ PRs are welcome! Some ideas:
 ## License
 
 MIT License - see [LICENSE](https://rflpazini.mit-license.org/) file for details.
+
+## Backup & Integrity Verification
+
+Robust database backups ensure you can upgrade Postgres versions and recover quickly. This project includes scripts for full cluster backups, schema‑scoped public exports, row count integrity, compression, and cryptographic manifests.
+
+### Artifact Types
+| Type | Purpose | Created By |
+|------|---------|------------|
+| `backup_<ts>.sql.gz` | Full cluster logical dump (pg_dumpall) | `scripts/backup-nightly.ps1` |
+| `public_only_<ts>.dump.gz` | Custom format restore-capable (pg_dump -Fc -n public) | `scripts/create-public-dump.ps1` / nightly |
+| `public_only_<ts>.sql.gz` | Portable SQL with `--column-inserts` (public schema only) | same as above |
+| `public_only_<ts>_counts.csv` | Table row counts snapshot for integrity diff | same as above |
+| `public_only_<ts>_counts.json` | JSON summary (tables + total rows + per table counts) | same as above |
+| `manifest_public_only_<ts>.sha256` | SHA256 hashes for that public-only run | `create-public-dump.ps1` |
+| `manifest_<ts>.sha256` | Master manifest (full + public artifacts) | `backup-nightly.ps1` |
+
+### Quick Manual Backup
+```powershell
+pwsh ./scripts/create-public-dump.ps1
+```
+
+### Nightly Automated Backup
+```powershell
+pwsh ./scripts/backup-nightly.ps1 -RetentionDays 7
+```
+
+Schedule nightly (default 02:00):
+```powershell
+pwsh ./scripts/schedule-nightly-backups.ps1 -Time '02:00'
+```
+
+Remove scheduled task:
+```powershell
+pwsh ./scripts/schedule-nightly-backups.ps1 -Remove
+```
+
+### Integrity Verification (Counts Diff)
+After creating a public-only dump, validate restore integrity in an ephemeral container:
+```powershell
+pwsh ./scripts/test-restore.ps1 -StrictCounts
+```
+If table counts differ from the captured `public_only_*_counts.csv` the script exits non-zero with a diff summary.
+
+### Hash Verification
+To confirm artifact integrity later:
+```powershell
+Get-Content .\backups\manifest_<timestamp>.sha256 | ForEach-Object {
+  $parts = $_ -split '\s+'; if ($parts.Length -ge 2) { $expected=$parts[0]; $file=$parts[-1];
+    $actual=(Get-FileHash -Algorithm SHA256 -Path .\backups\$file).Hash.ToLower();
+    if ($actual -eq $expected) { "OK  $file" } else { "MISMATCH  $file" }
+  }
+}
+```
+
+### Recommended Workflow
+1. Run nightly backups (retention enforced) or manual `create-public-dump.ps1` before risky changes.
+2. Verify counts integrity with `test-restore.ps1 -StrictCounts`.
+3. Optionally store manifests off-host (cloud storage, S3, etc.).
+4. Periodically test restore using latest full + public-only artifacts.
+
+### Design Notes
+* Gzip compression reduces storage footprint; manifests store hashes post-compression.
+* Counts CSV provides a lightweight data quality guard beyond structural restore.
+* Portable SQL (`--column-inserts`) allows selective manual inspection or cherry-pick recovery.
+* Custom format `.dump.gz` enables fast single-table targeted pg_restore operations.
+* Separate manifest files allow independent verification of public-only set vs full cluster.
+
+### Future Enhancements (Ideas)
+* Optional encryption (openssl age or gpg) prior to offsite sync.
+* Parallel compression for large datasets.
+* Automatic retention of only manifests + latest N days to further reduce space.
+* Differential backups (requires external tooling / WAL archiving).
+
+### Encryption (Optional)
+You can encrypt artifacts during creation (Age or GPG). Provide one recipient; add `-RemovePlaintext` to delete originals post-encryption.
+
+Age example:
+```powershell
+pwsh ./scripts/create-public-dump.ps1 -Encrypt -AgeRecipient 'age1qyq...publickey...' -RemovePlaintext
+```
+
+GPG example:
+```powershell
+pwsh ./scripts/backup-nightly.ps1 -Encrypt -GpgRecipient 'DB Backup Key <dba@example.com>' -RemovePlaintext
+```
+
+Artifacts receive `.age` or `.gpg` suffixes. Manifests are hashed pre-encryption; keep encrypted manifests for tamper evidence.
+
+### Offsite Upload (S3)
+Upload a full set for a specific timestamp (plaintext and optionally encrypted files) using AWS CLI:
+```powershell
+pwsh ./scripts/upload-backup-s3.ps1 -Timestamp 20251111_230100 -Bucket my-backup-bucket -Prefix prod/db -IncludeEncrypted
+```
+
+Dry run:
+```powershell
+pwsh ./scripts/upload-backup-s3.ps1 -Timestamp 20251111_230100 -Bucket my-backup-bucket -DryRun
+```
+
+Ensure `aws` CLI is configured (`aws configure` or env vars). Prefix defaults to `backups`.
+
+### Verify Integrity from Manifests
+To re-check the local artifacts against their manifests:
+```powershell
+pwsh ./scripts/verify-backup-integrity.ps1 -Timestamp 20251111_230100 -IncludePublicOnlyManifest -IncludeFullManifest
+```
+Or let the script auto-pick the latest:
+```powershell
+pwsh ./scripts/verify-backup-integrity.ps1
+```
+
+Prerequisites for optional features:
+- Encryption: age or gpg installed on PATH
+- S3 upload: aws CLI configured with credentials/profile
+
+### Configuration File & Env Overrides
+
+Instead of passing command-line arguments each time, create `scripts/backup.config.psd1` (copy from `backup.config.psd1.example`). Environment variables (prefixed `BACKUP_*`) override both config file and parameters.
+
+**Config keys** (`backup.config.psd1`):
+| Key | Default | Description |
+|-----|---------|-------------|
+| `Service` | `'db'` | Docker Compose service name |
+| `Database` | `'postgres'` | Database name |
+| `User` | `'postgres'` | Postgres user |
+| `RetentionDaysPlaintext` | `7` | Days to keep plaintext artifacts before pruning |
+| `RetentionDaysEncrypted` | `30` | Days to keep encrypted artifacts before pruning |
+| `PruneMode` | `'all'` | Prune mode: `'all'` \| `'plaintext-only'` \| `'encrypted-only'` |
+| `CompressionLevel` | `'Optimal'` | Compression level: `'Optimal'` \| `'Fastest'` \| `'NoCompression'` |
+| `Encrypt` | `$false` | Enable encryption |
+| `AgeRecipient` | `''` | Age public key (e.g., `age1qyq...`) |
+| `GpgRecipient` | `''` | GPG key ID or email |
+| `RemovePlaintext` | `$false` | Remove plaintext after encryption |
+| `AwsProfile` | `''` | AWS CLI profile name |
+| `Bucket` | `''` | S3 bucket for uploads |
+| `Prefix` | `'backups'` | S3 prefix path |
+| `SmtpServer` | `''` | SMTP server hostname (e.g., `smtp.gmail.com`) |
+| `SmtpPort` | `587` | SMTP port |
+| `SmtpFrom` | `''` | From email address |
+| `SmtpUser` | `''` | SMTP auth username (optional; leave empty for anonymous) |
+| `SmtpPassword` | `''` | SMTP auth password (optional) |
+| `AlertRecipients` | `@()` | Array of alert recipient emails (e.g., `@('admin@example.com')`) |
+| `WalArchiveRetentionDays` | `14` | Days to keep WAL archive files |
+
+**Environment overrides** (examples):
+```powershell
+$env:BACKUP_RETENTION_PLAIN = 14
+$env:BACKUP_COMPRESSION_LEVEL = 'Fastest'
+$env:BACKUP_ENCRYPT = 'true'
+$env:BACKUP_AGE_RECIPIENT = 'age1qyq...'
+$env:BACKUP_ALERT_SMTP_SERVER = 'smtp.gmail.com'
+$env:BACKUP_ALERT_RECIPIENTS = 'admin@example.com,dba@example.com'
+$env:BACKUP_WAL_RETENTION_DAYS = 21
+pwsh ./scripts/backup-nightly.ps1
+```
+
+All scripts respect these settings (backup-nightly.ps1, create-public-dump.ps1, upload-backup-s3.ps1, send-backup-alert.ps1, wal-prune.ps1).
+
+### Compression Level Tuning
+
+Choose compression level per backup to balance speed vs. size:
+- **Optimal** (default): Best compression ratio (smallest files), slower
+- **Fastest**: Faster compression, larger files
+- **NoCompression**: Maximum speed, no size reduction (archive for structure only)
+
+Example:
+```powershell
+pwsh ./scripts/backup-nightly.ps1 -CompressionLevel Fastest
+```
+Or set in config:
+```powershell
+CompressionLevel = 'Fastest'
+```
+
+### Email Alerts on Backup Failures
+
+When integrity verification fails (hash mismatch, missing artifacts), the harness can send email alerts to a configurable list of recipients.
+
+**Configuration** (in `backup.config.psd1`):
+```powershell
+SmtpServer = 'smtp.gmail.com'
+SmtpPort = 587
+SmtpFrom = 'backups@example.com'
+SmtpUser = 'backups@example.com'        # Optional; omit for anonymous SMTP
+SmtpPassword = 'your-smtp-password'      # Optional
+AlertRecipients = @('admin@example.com', 'dba@example.com')
+```
+
+**Manual alert test**:
+```powershell
+pwsh ./scripts/send-backup-alert.ps1 -Subject "Test Alert" -Body "This is a test"
+```
+
+**Automatic alerts**: The `run-backup-upload-verify.ps1` harness now sends alerts automatically when verification detects issues (exit code > 0). The email includes the verification output and timestamp for investigation.
+
+Environment overrides (prefix `BACKUP_ALERT_*`):
+```powershell
+$env:BACKUP_ALERT_SMTP_SERVER = 'smtp.office365.com'
+$env:BACKUP_ALERT_SMTP_PORT = 587
+$env:BACKUP_ALERT_SMTP_FROM = 'backups@company.com'
+$env:BACKUP_ALERT_RECIPIENTS = 'admin@company.com,oncall@company.com'
+```
+
+### Point-In-Time Recovery (WAL Archiving)
+
+The database now archives Write-Ahead Log (WAL) files to the `wal_archive` volume, enabling point-in-time recovery (PITR). WAL archiving captures every transaction, allowing you to restore to any second between full backups.
+
+**WAL configuration** (already enabled in `compose.yml`):
+```yaml
+volumes:
+  - wal_archive:/wal_archive
+command:
+  - "-c" 
+  - "archive_mode=on"
+  - "-c"
+  - "archive_command=test ! -f /wal_archive/%f && cp %p /wal_archive/%f"
+```
+
+**WAL archive pruning** (automatic retention):
+```powershell
+pwsh ./scripts/wal-prune.ps1 -RetentionDays 14
+```
+Or configure in `backup.config.psd1`:
+```powershell
+WalArchiveRetentionDays = 14
+```
+Environment override:
+```powershell
+$env:BACKUP_WAL_RETENTION_DAYS = 21
+pwsh ./scripts/wal-prune.ps1
+```
+
+**Performing a Point-In-Time Recovery**:
+
+1. **Stop the database** (if running):
+   ```powershell
+   docker compose down db
+   ```
+
+2. **Restore the base backup** (latest full backup before your target time):
+   ```powershell
+   # Extract the full cluster backup
+   gunzip -c backups/backup_<timestamp>.sql.gz | docker compose exec -T db psql -U postgres
+   ```
+
+3. **Configure recovery** (create `recovery.conf` or set recovery target in compose):
+   ```yaml
+   # Add to db command in compose.yml (temporary, for recovery only)
+   command:
+     - "postgres"
+     - "-c"
+     - "restore_command=cp /wal_archive/%f %p"
+     - "-c"
+     - "recovery_target_time=2025-11-11 15:30:00"
+   ```
+
+4. **Start recovery**:
+   ```powershell
+   docker compose up -d db
+   ```
+   Postgres will replay WAL files from `/wal_archive` up to the target time.
+
+5. **Promote to primary** (after recovery completes):
+   Remove recovery settings from `compose.yml` and restart:
+   ```powershell
+   docker compose restart db
+   ```
+
+**Best practices**:
+- Schedule `wal-prune.ps1` nightly (after backup-nightly) to prevent unbounded growth.
+- Keep WAL retention >= 2× full backup interval (e.g., if backups are weekly, retain 14 days of WAL).
+- Test PITR recovery periodically in a non-production environment.
+- Archive WAL files to S3 for long-term retention (similar to backup uploads).
+
+**Troubleshooting WAL archiving**:
+- Check WAL archive directory inside container: `docker compose exec db ls -lh /wal_archive`
+- Verify archive_command success: `docker compose exec db psql -U postgres -c "SHOW archive_mode;"`
+- Monitor for failed archive attempts in Postgres logs: `docker compose logs db | grep archive`
+

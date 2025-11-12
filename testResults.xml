@@ -1,0 +1,67 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<test-results xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="nunit_schema_2.5.xsd" name="Pester" total="6" errors="0" failures="6" not-run="0" inconclusive="0" ignored="0" skipped="0" invalid="0" date="2025-11-10" time="15:41:15">
+  <environment cwd="C:\Users\monte\Documents\cert api token keys ids\GITHUB FOLDER\GitHub\mcp-api-gateway" clr-version="9.0.10" nunit-version="2.5.8.0" user-domain="DESKTOP-B11GBP0" machine-name="DESKTOP-B11GBP0" user="monte" platform="Microsoft Windows 10 Home|C:\WINDOWS|\Device\Harddisk0\Partition2" os-version="10.0.19045" />
+  <culture-info current-culture="en-US" current-uiculture="en-US" />
+  <test-suite type="TestFixture" name="Pester" executed="True" result="Failure" success="False" time="4.0409" asserts="0" description="Pester">
+    <results>
+      <test-suite type="TestFixture" name="C:\Users\monte\Documents\cert api token keys ids\GITHUB FOLDER\GitHub\mcp-api-gateway\scripts\tests\Extensions.Tests.ps1" executed="True" result="Failure" success="False" time="4.0409" asserts="0" description="C:\Users\monte\Documents\cert api token keys ids\GITHUB FOLDER\GitHub\mcp-api-gateway\scripts\tests\Extensions.Tests.ps1">
+        <results>
+          <test-suite type="TestFixture" name="Extension Upgrade Prerequisites" executed="True" result="Failure" success="False" time="2.2837" asserts="0" description="Extension Upgrade Prerequisites">
+            <results>
+              <test-case description="TimescaleDB should be installed or absent gracefully" name="Extension Upgrade Prerequisites.TimescaleDB should be installed or absent gracefully" time="1.0746" asserts="0" success="False" result="Failure" executed="True">
+                <failure>
+                  <message>CommandNotFoundException: The term 'Get-ExtensionVersions' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.</message>
+                  <stack-trace>at &lt;ScriptBlock&gt;, C:\Users\monte\Documents\cert api token keys ids\GITHUB FOLDER\GitHub\mcp-api-gateway\scripts\tests\Extensions.Tests.ps1:17</stack-trace>
+                </failure>
+              </test-case>
+              <test-case description="plv8 should be installed or absent gracefully" name="Extension Upgrade Prerequisites.plv8 should be installed or absent gracefully" time="0.7439" asserts="0" success="False" result="Failure" executed="True">
+                <failure>
+                  <message>CommandNotFoundException: The term 'Get-ExtensionVersions' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.</message>
+                  <stack-trace>at &lt;ScriptBlock&gt;, C:\Users\monte\Documents\cert api token keys ids\GITHUB FOLDER\GitHub\mcp-api-gateway\scripts\tests\Extensions.Tests.ps1:23</stack-trace>
+                </failure>
+              </test-case>
+              <test-case description="uuid-ossp should exist (required for app)" name="Extension Upgrade Prerequisites.uuid-ossp should exist (required for app)" time="0.1918" asserts="0" success="False" result="Failure" executed="True">
+                <failure>
+                  <message>CommandNotFoundException: The term 'Get-ExtensionVersions' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.</message>
+                  <stack-trace>at &lt;ScriptBlock&gt;, C:\Users\monte\Documents\cert api token keys ids\GITHUB FOLDER\GitHub\mcp-api-gateway\scripts\tests\Extensions.Tests.ps1:29</stack-trace>
+                </failure>
+              </test-case>
+              <test-case description="pgcrypto should exist (required for app)" name="Extension Upgrade Prerequisites.pgcrypto should exist (required for app)" time="0.1455" asserts="0" success="False" result="Failure" executed="True">
+                <failure>
+                  <message>CommandNotFoundException: The term 'Get-ExtensionVersions' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.</message>
+                  <stack-trace>at &lt;ScriptBlock&gt;, C:\Users\monte\Documents\cert api token keys ids\GITHUB FOLDER\GitHub\mcp-api-gateway\scripts\tests\Extensions.Tests.ps1:34</stack-trace>
+                </failure>
+              </test-case>
+            </results>
+          </test-suite>
+          <test-suite type="TestFixture" name="Hypertable Metadata Snapshot (TimescaleDB optional)" executed="True" result="Failure" success="False" time="2.4598" asserts="0" description="Hypertable Metadata Snapshot (TimescaleDB optional)">
+            <results>
+              <test-case description="Can query hypertables if TimescaleDB is present" name="Hypertable Metadata Snapshot (TimescaleDB optional).Can query hypertables if TimescaleDB is present" time="0.1588" asserts="0" success="False" result="Failure" executed="True">
+                <failure>
+                  <message>CommandNotFoundException: The term 'Invoke-PostgresQuery' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.</message>
+                  <stack-trace>at &lt;ScriptBlock&gt;, C:\Users\monte\Documents\cert api token keys ids\GITHUB FOLDER\GitHub\mcp-api-gateway\scripts\tests\Extensions.Tests.ps1:42</stack-trace>
+                </failure>
+              </test-case>
+            </results>
+          </test-suite>
+          <test-suite type="TestFixture" name="plv8 Function Snapshot (optional)" executed="True" result="Failure" success="False" time="2.6499" asserts="0" description="plv8 Function Snapshot (optional)">
+            <results>
+              <test-case description="Captures plv8 function list (zero or more)" name="plv8 Function Snapshot (optional).Captures plv8 function list (zero or more)" time="0.1648" asserts="0" success="False" result="Failure" executed="True">
+                <failure>
+                  <message>CommandNotFoundException: The term 'Invoke-PostgresQuery' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.</message>
+                  <stack-trace>at &lt;ScriptBlock&gt;, C:\Users\monte\Documents\cert api token keys ids\GITHUB FOLDER\GitHub\mcp-api-gateway\scripts\tests\Extensions.Tests.ps1:55</stack-trace>
+                </failure>
+              </test-case>
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+    </results>
+  </test-suite>
+</test-results>

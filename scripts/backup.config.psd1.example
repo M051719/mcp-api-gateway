@@ -1,0 +1,37 @@
+@{
+  # Core DB service
+  Service = 'db'
+  Database = 'postgres'
+  User = 'postgres'
+
+  # Retention policy (days)
+  RetentionDaysPlaintext = 7
+  RetentionDaysEncrypted = 30
+  # PruneMode: 'all' | 'plaintext-only' | 'encrypted-only'
+  PruneMode = 'all'
+
+  # Compression level: 'Optimal' | 'Fastest' | 'NoCompression'
+  CompressionLevel = 'Optimal'
+
+  # Encryption
+  Encrypt = $false
+  AgeRecipient = ''   # e.g., 'age1qyq...'
+  GpgRecipient = ''   # e.g., 'DB Backup Key <dba@example.com>'
+  RemovePlaintext = $false
+
+  # S3 upload defaults (used by upload-backup-s3.ps1)
+  AwsProfile = ''
+  Bucket = ''
+  Prefix = 'backups'
+
+  # Email alerts on backup integrity failure
+  SmtpServer = ''           # e.g., 'smtp.gmail.com'
+  SmtpPort = 587
+  SmtpFrom = ''             # e.g., 'backups@example.com'
+  SmtpUser = ''             # Optional: SMTP auth username (if empty, uses anonymous)
+  SmtpPassword = ''         # Optional: SMTP auth password
+  AlertRecipients = @()     # e.g., @('admin@example.com', 'dba@example.com')
+
+  # WAL archiving (point-in-time recovery)
+  WalArchiveRetentionDays = 14
+}

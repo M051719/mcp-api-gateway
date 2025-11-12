@@ -1,0 +1,40 @@
+2025-11-11 05:20:41 : =========================================
+2025-11-11 05:20:41 : PRE-UPGRADE VALIDATION REPORT
+2025-11-11 05:20:41 : =========================================
+2025-11-11 05:20:41 : 
+2025-11-11 05:20:41 : 1. POSTGRES VERSION:
+2025-11-11 05:20:46 : PostgreSQL 15.1 (Ubuntu 15.1-1.pgdg20.04+1) on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 9.4.0-1ubuntu1~20.04.1) 9.4.0, 64-bit
+2025-11-11 05:20:46 : 
+2025-11-11 05:20:47 : 2. INSTALLED EXTENSIONS:
+2025-11-11 05:20:53 :   pg_graphql|1.2.3
+2025-11-11 05:20:53 :   pg_stat_statements|1.10
+2025-11-11 05:20:53 :   pgcrypto|1.3
+2025-11-11 05:20:53 :   pgjwt|0.2.0
+2025-11-11 05:20:53 :   pgsodium|3.1.8
+2025-11-11 05:20:53 :   plpgsql|1.0
+2025-11-11 05:20:53 :   supabase_vault|0.2.8
+2025-11-11 05:20:53 :   uuid-ossp|1.1
+2025-11-11 05:20:53 : 
+2025-11-11 05:20:53 : 3. DATABASE SIZE:
+2025-11-11 05:20:57 :   Total: 8949 kB
+2025-11-11 05:20:57 : 
+2025-11-11 05:20:57 : 4. TABLE INVENTORY:
+2025-11-11 05:21:01 :   Public schema tables: 5
+2025-11-11 05:21:04 :   public|api_keys
+2025-11-11 05:21:04 :   public|apis
+2025-11-11 05:21:04 :   public|umzug_migrations
+2025-11-11 05:21:04 :   public|usage_logs
+2025-11-11 05:21:04 :   public|users
+2025-11-11 05:21:04 : 
+2025-11-11 05:21:04 : 5. UPGRADE READINESS:
+2025-11-11 05:21:18 :   ✅ No TimescaleDB - standard upgrade OK
+2025-11-11 05:21:18 :   ✅ No plv8 - standard upgrade OK
+2025-11-11 05:21:18 :   ✅ No pg_cron - no archival needed
+2025-11-11 05:21:18 : 
+2025-11-11 05:21:18 : 6. CONNECTION HEALTH:
+2025-11-11 05:21:23 :   Active connections: 7
+2025-11-11 05:21:23 : 
+2025-11-11 05:21:23 : =========================================
+2025-11-11 05:21:23 : REPORT COMPLETE
+2025-11-11 05:21:23 : =========================================
+2025-11-11 05:21:23 : Report saved to: tmp\upgrade_report\upgrade_prep_20251111_052041.txt
