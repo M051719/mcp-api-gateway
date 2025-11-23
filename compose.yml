@@ -11,6 +11,12 @@ services:
       - SUPABASE_URL=http://kong:8000
       - SUPABASE_KEY=your-anon-key
       - SUPABASE_SECRET_KEY=your-service-role-key
+      # API Configuration - Add your APIs here
+      # Example: PetStore API (for testing)
+      - API_1_NAME=petstore
+      - API_1_SWAGGER_URL=https://petstore.swagger.io/v2/swagger.json
+      - API_1_BASE_URL=https://petstore.swagger.io/v2
+      # Add more APIs by incrementing the number (API_2_*, API_3_*, etc.)
     ports:
       - "3000:3000"
     depends_on:

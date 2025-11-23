@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Property Lookup - Pre-Foreclosure & Investment Analysis</title>
+    <link rel="stylesheet" href="../../styles/main.css">
+    <link rel="stylesheet" href="../../styles/services.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="/" class="logo">CreditPro</a>
+            <ul class="nav-menu">
+                <li><a href="/services/credit-repair">Credit Repair</a></li>
+                <li><a href="/services/credit-builder">Credit Builder</a></li>
+                <li><a href="/services/property-lookup" class="active">Property Lookup</a></li>
+                <li><a href="/pricing">Pricing</a></li>
+                <li><a href="/dashboard" class="btn btn-primary btn-sm">Dashboard</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section class="service-hero">
+        <div class="container">
+            <h1>Pre-Foreclosure Property Lookup</h1>
+            <p class="lead">Find distressed properties, analyze deals, and make informed investment decisions</p>
+        </div>
+    </section>
+
+    <section class="service-content section-padding">
+        <div class="container">
+            <!-- Search Tool -->
+            <div class="search-section">
+                <h2>Search Properties</h2>
+                <div class="property-search-form">
+                    <div class="search-row">
+                        <input type="text" placeholder="Address, City, State, or ZIP" class="search-input">
+                        <button class="btn btn-primary">Search</button>
+                    </div>
+                    <div class="filter-row">
+                        <select class="filter-select">
+                            <option>Property Type</option>
+                            <option>Single Family</option>
+                            <option>Multi-Family</option>
+                            <option>Condo</option>
+                            <option>Townhouse</option>
+                        </select>
+                        <select class="filter-select">
+                            <option>Status</option>
+                            <option>Pre-Foreclosure</option>
+                            <option>Auction</option>
+                            <option>Bank Owned</option>
+                        </select>
+                        <input type="number" placeholder="Min Price" class="filter-input">
+                        <input type="number" placeholder="Max Price" class="filter-input">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Map View -->
+            <div class="map-section">
+                <div id="propertyMap" class="property-map">
+                    <div class="map-placeholder">
+                        <p>🗺️ Interactive map showing pre-foreclosure properties</p>
+                        <p class="small">Upgrade to Premium or Elite for full map access</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results -->
+            <div class="results-section">
+                <h2>Search Results <span class="result-count">(12 properties found)</span></h2>
+                
+                <div class="property-list">
+                    <div class="property-card">
+                        <div class="property-image">
+                            <img src="/images/property-placeholder.jpg" alt="Property">
+                            <span class="property-badge pre-foreclosure">Pre-Foreclosure</span>
+                        </div>
+                        <div class="property-info">
+                            <h3>1234 Main Street</h3>
+                            <p class="property-location">Phoenix, AZ 85001</p>
+                            <div class="property-details">
+                                <span>3 bed</span> • <span>2 bath</span> • <span>1,800 sqft</span>
+                            </div>
+                            <div class="property-price">
+                                <span class="price">$245,000</span>
+                                <span class="price-label">Est. Market Value</span>
+                            </div>
+                            <div class="property-metrics">
+                                <div class="metric">
+                                    <span class="metric-label">Days Listed</span>
+                                    <span class="metric-value">45</span>
+                                </div>
+                                <div class="metric">
+                                    <span class="metric-label">Est. ARV</span>
+                                    <span class="metric-value">$285K</span>
+                                </div>
+                                <div class="metric">
+                                    <span class="metric-label">Potential ROI</span>
+                                    <span class="metric-value positive">16%</span>
+                                </div>
+                            </div>
+                            <div class="property-actions">
+                                <button class="btn btn-primary btn-sm">View Details</button>
+                                <button class="btn btn-outline btn-sm">Run Analysis</button>
+                                <button class="btn btn-outline btn-sm">Save</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="property-card">
+                        <div class="property-image">
+                            <img src="/images/property-placeholder.jpg" alt="Property">
+                            <span class="property-badge auction">Auction</span>
+                        </div>
+                        <div class="property-info">
+                            <h3>5678 Oak Avenue</h3>
+                            <p class="property-location">Scottsdale, AZ 85250</p>
+                            <div class="property-details">
+                                <span>4 bed</span> • <span>3 bath</span> • <span>2,400 sqft</span>
+                            </div>
+                            <div class="property-price">
+                                <span class="price">$385,000</span>
+                                <span class="price-label">Starting Bid</span>
+                            </div>
+                            <div class="property-metrics">
+                                <div class="metric">
+                                    <span class="metric-label">Auction Date</span>
+                                    <span class="metric-value">Dec 15</span>
+                                </div>
+                                <div class="metric">
+                                    <span class="metric-label">Est. ARV</span>
+                                    <span class="metric-value">$450K</span>
+                                </div>
+                                <div class="metric">
+                                    <span class="metric-label">Potential ROI</span>
+                                    <span class="metric-value positive">17%</span>
+                                </div>
+                            </div>
+                            <div class="property-actions">
+                                <button class="btn btn-primary btn-sm">View Details</button>
+                                <button class="btn btn-outline btn-sm">Run Analysis</button>
+                                <button class="btn btn-outline btn-sm">Save</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Features by Tier -->
+            <div class="tier-features-section">
+                <h2>Property Lookup Features by Membership</h2>
+                <table class="features-table">
+                    <thead>
+                        <tr>
+                            <th>Feature</th>
+                            <th>Basic (Free)</th>
+                            <th>Professional</th>
+                            <th>Elite</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Property Lookups</td>
+                            <td>10/month</td>
+                            <td>100/month</td>
+                            <td>Unlimited</td>
+                        </tr>
+                        <tr>
+                            <td>Property Comps</td>
+                            <td>❌</td>
+                            <td>5 per property</td>
+                            <td>Unlimited</td>
+                        </tr>
+                        <tr>
+                            <td>Deal Calculator</td>
+                            <td>❌</td>
+                            <td>Basic</td>
+                            <td>Advanced</td>
+                        </tr>
+                        <tr>
+                            <td>Market Analytics</td>
+                            <td>❌</td>
+                            <td>✓</td>
+                            <td>✓ Enhanced</td>
+                        </tr>
+                        <tr>
+                            <td>Property Mapping</td>
+                            <td>Basic</td>
+                            <td>Advanced</td>
+                            <td>Premium + Heat Maps</td>
+                        </tr>
+                        <tr>
+                            <td>AI Property Analysis</td>
+                            <td>❌</td>
+                            <td>Limited</td>
+                            <td>Unlimited</td>
+                        </tr>
+                        <tr>
+                            <td>Export Reports</td>
+                            <td>❌</td>
+                            <td>✓</td>
+                            <td>✓ Custom Branded</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="text-center mt-4">
+                    <a href="/pricing" class="btn btn-primary btn-lg">Compare All Plans</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Property Lookup Services. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Property search functionality
+        document.querySelector('.search-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+
+        function performSearch() {
+            const searchValue = document.querySelector('.search-input').value;
+            console.log('Searching for:', searchValue);
+            // API call would go here
+        }
+    </script>
+</body>
+</html>
