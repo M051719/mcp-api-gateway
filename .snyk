@@ -1,0 +1,39 @@
+# Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities.
+version: v1.25.0
+
+# Ignore specific vulnerabilities (examples - customize as needed)
+ignore:
+  # Example: Ignore prototype pollution in production dependencies if risk is mitigated
+  # 'SNYK-JS-MINIMIST-559764':
+  #   - '*':
+  #       reason: 'Risk mitigated by input validation'
+  #       expires: '2025-03-31T00:00:00.000Z'
+
+# Patch specific vulnerabilities
+patch: {}
+
+# Language settings
+language-settings:
+  javascript:
+    # Ignore dev dependencies in production scans
+    ignore-dev-deps: false
+
+# Exclude directories from scanning
+exclude:
+  # Don't scan test files
+  - test/**
+  - tests/**
+  - '**/*.test.js'
+  - '**/*.spec.js'
+  # Don't scan backup files
+  - backups/**
+  - pre_upgrade_backups/**
+  # Don't scan build outputs
+  - dist/**
+  - build/**
+  # Don't scan temporary files
+  - tmp/**
+  - temp/**
+  # Don't scan documentation
+  - docs/**
+  - netlify-analysis/**

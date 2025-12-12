@@ -5,22 +5,25 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-  "start": "node index.js",
-  "dev": "nodemon index.js",
-  "test": "node --test",
-  "docker:build": "docker build -t mcp-api-gateway .",
-  "docker:run": "docker run --rm -it mcp-api-gateway",
-  "migrate": "node ./scripts/migrate.js up",
-  "migrate:down": "node ./scripts/migrate.js down",
-  "migrate:status": "node ./scripts/migrate.js status",
-  "start:with-migrations": "sh ./scripts/start.sh",
-  "seed": "node ./scripts/seed.js",
-  "seed:dev": "node ./scripts/seed.js development",
-  "seed:prod": "node ./scripts/seed.js production",
-  "switch-env": "node ./scripts/switch-env.js",
-  "switch-env:ps": "powershell -ExecutionPolicy Bypass -File ./scripts/switch-env.ps1",
-  "validate-env": "node ./scripts/validate-env.js",
-  "list-envs": "node ./scripts/list-envs.js"
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "node --test",
+    "docker:build": "docker build -t mcp-api-gateway .",
+    "docker:run": "docker run --rm -it mcp-api-gateway",
+    "migrate": "node ./scripts/migrate.js up",
+    "migrate:down": "node ./scripts/migrate.js down",
+    "migrate:status": "node ./scripts/migrate.js status",
+    "start:with-migrations": "sh ./scripts/start.sh",
+    "seed": "node ./scripts/seed.js",
+    "seed:dev": "node ./scripts/seed.js development",
+    "seed:prod": "node ./scripts/seed.js production",
+    "switch-env": "node ./scripts/switch-env.js",
+    "switch-env:ps": "powershell -ExecutionPolicy Bypass -File ./scripts/switch-env.ps1",
+    "validate-env": "node ./scripts/validate-env.js",
+    "list-envs": "node ./scripts/list-envs.js",
+    "snyk:test": "snyk test",
+    "snyk:monitor": "snyk monitor",
+    "snyk:protect": "snyk protect"
   },
   "keywords": [
     "mcp",
@@ -51,7 +54,8 @@
     "nodemon": "^3.1.0",
     "zod": "^3.21.4",
     "dotenv": "^16.3.1",
-    "inquirer": "^9.2.7"
+    "inquirer": "^9.2.7",
+    "snyk": "^1.1293.1"
   },
   "engines": {
     "node": ">=18.0.0"
