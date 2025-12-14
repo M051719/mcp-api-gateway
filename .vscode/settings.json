@@ -3,5 +3,12 @@
         "cursor-workspace": true,
         "cursor-global": true,
         "claude-desktop": true
+    },
+    "chat.mcp.serverSampling": {
+        "mcp-api-gateway/.vscode/mcp.json: MCP_DOCKER": {
+            "allowedModels": [
+                "copilot/gpt-5.1-codex-max"
+            ]
+        }
     }
 }
