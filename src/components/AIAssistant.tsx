@@ -1,12 +1,14 @@
 /**
- * AI Assistant with Dappier MCP Integration
- * Floating chat button with real-time data
+ * AI Assistant with Knowledge Base + Dappier Integration
+ * Searches KB first, then enhances with real-time Dappier data
  */
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageCircle, X, Send, Loader, Sparkles } from 'lucide-react';
+import { MessageCircle, X, Send, Loader, Sparkles, BookOpen } from 'lucide-react';
 import { dappierService } from '../services/dappierService';
+import { knowledgeBaseService } from '../services/knowledgeBaseService';
+import { supabase } from '../lib/supabase';
 
 interface Message {
   id: string;
@@ -14,6 +16,8 @@ interface Message {
   content: string;
   timestamp: Date;
   hasRealTimeData?: boolean;
+  hasKBData?: boolean;
+  kbArticles?: Array<{ id: string; title: string; }>;
 }
 
 export default function AIAssistant() {
@@ -22,59 +26,132 @@ export default function AIAssistant() {
     {
       id: '1',
       role: 'assistant',
-      content: "👋 Hi! I'm your AI assistant with access to real-time market data. I can help with foreclosure prevention, property analysis, credit repair, and more. Ask me anything!",
+      content: "👋 Hi! I'm your AI assistant with access to our Knowledge Base AND real-time market data. I can help with foreclosure prevention, property analysis, credit repair, DSCR loans, and more. Ask me anything!",
       timestamp: new Date()
     }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [userTier, setUserTier] = useState<'basic' | 'premium' | 'elite'>('basic');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
+  // Fetch user tier on mount
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    fetchUserTier();
+  }, []);
 
-  const generateAIResponse = async (userMessage: string): Promise<string> => {
+  const fetchUserTier = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();{ response: string; kbArticles: Array<{ id: string; title: string; }>; hasRealTime: boolean; hasKB: boolean }> => {
     const lowerMessage = userMessage.toLowerCase();
+    let response = '';
+    let kbArticles: Array<{ id: string; title: string; }> = [];
+    let hasRealTime = false;
+    let hasKB = false;
 
-    // Try to get real-time data enhancement first
-    let realTimeEnhancement = '';
-    if (dappierService.isConfigured()) {
-      realTimeEnhancement = await dappierService.enhanceWithRealTimeData(userMessage) || '';
+    // STEP 1: Search Knowledge Base first
+    const kbResults = await knowledgeBaseService.searchArticles(userMessage, userTier);
+    
+    if (kbResults.hasResults && kbResults.articles.length > 0) {
+      hasKB = true;
+      const topArticle = kbResults.articles[0];
+      kbArticles = kbResults.articles.slice(0, 3).map(a => ({ id: a.id, title: a.title }));
+
+      // Extract excerpt from top article
+      response = `📚 **From our Knowledge Base:**\n\n${topArticle.excerpt}\n\n`;
+      
+      if (kbResults.articles.length > 1) {
+        response += `**Related Articles:**\n`;
+        kbResults.articles.slice(0, 3).forEach((article, idx) => {
+          response += `${idx + 1}. ${article.title}\n`;
+        });
+        response += `\nVisit the Knowledge Base page to read full articles!\n\n`;
+      }
     }
 
-    // Base responses for common queries
-    let baseResponse = '';
+    // STEP 2: Check if real-time data is needed
+    const needsRealTimeData = lowerMessage.includes('market') || 
+                              lowerMessage.includes('rate') || 
+                              lowerMessage.includes('current') ||
+                              lowerMessage.includes('price') ||
+                              lowerMessage.includes('trend');
 
-    if (lowerMessage.includes('foreclosure') || lowerMessage.includes('prevent')) {
-      baseResponse = "I can help you understand foreclosure prevention options:\n\n" +
-        "1. **Loan Modification**: Negotiate new terms with your lender\n" +
-        "2. **Forbearance**: Temporarily pause payments\n" +
-        "3. **Repayment Plan**: Catch up on missed payments over time\n" +
-        "4. **Short Sale**: Sell for less than owed with lender approval\n" +
-        "5. **Deed in Lieu**: Transfer property to avoid foreclosure\n\n" +
-        "Would you like me to connect you with our in-house loan processing team?";
-    } else if (lowerMessage.includes('credit') || lowerMessage.includes('score')) {
-      baseResponse = "I can guide you on credit repair:\n\n" +
-        "✅ **Dispute Errors**: Challenge inaccurate items on your report\n" +
-        "✅ **Payment Plans**: Set up on-time payment strategies\n" +
-        "✅ **Credit Utilization**: Keep balances below 30%\n" +
-        "✅ **Credit Builder**: Open secured cards or credit-builder loans\n" +
-        "✅ **Debt Consolidation**: Combine high-interest debts\n\n" +
-        "Our credit repair dashboard has automated tools to help you improve your score.";
-    } else if (lowerMessage.includes('market') || lowerMessage.includes('price') || lowerMessage.includes('rate')) {
-      baseResponse = "For current market information, I'm fetching the latest data...";
-    } else if (lowerMessage.includes('property') || lowerMessage.includes('house')) {
-      baseResponse = "I can help with property analysis:\n\n" +
-        "📊 **Property Lookup**: Get detailed property information\n" +
-        "💰 **Cash Offer**: Receive a 24-hour cash offer\n" +
-        "📈 **Market Analysis**: Compare with similar properties\n" +
-        "🏠 **Deal Analysis**: Calculate ROI and cash flow\n\n" +
-        "What property address would you like me to analyze?";
+    if (needsRealTimeData && dappierService.isConfigured()) {
+      const realTimeData = await dappierService.enhanceWithRealTimeData(userMessage);
+      if (realTimeData) {
+        hasRealTime = true;
+        response += realTimeData;
+      }
+    }
+
+    // STEP 3: Add contextual guidance if no KB results
+    if (!hasKB) {
+      if (lowerMessage.includes('roi') || lowerMessage.includes('return on investment')) {
+        response = "💡 **ROI (Return on Investment):**\n\n" +
+          "ROI shows how much profit you make compared to your investment.\n\n" +
+          "**Formula:** (Profit - Cost) ÷ Cost × 100%\n\n" +
+          "Our calculators show:\n" +
+          "• Cash-on-Cash Return\n" +
+          "• Total ROI\n" +
+          "• Cap Rate\n" +
+          "• DSCR\n\n" +
+          "Visit our Knowledge Base for detailed ROI guides!";
+      } else if (lowerMessage.includes('1%') || lowerMessage.includes('one percent')) {
+        response = "📊 **The 1% Rule:**\n\n" +
+          "Monthly rent should be ≥1% of purchase price\n\n" +
+          "Example: $200K property needs $2,000/mo rent\n\n" +
+          "Use our Rental Analyzer to check any property!\n\n" +
+          "Check Knowledge Base for complete 1% Rule guide.";
+      } else if (lowerMessage.includes('dscr')) {
+        response = "🏦 **DSCR (Debt Service Coverage Ratio):**\n\n" +
+          "Formula: NOI ÷ Annual Debt Payment\n\n" +
+          "Lender Requirements:\n" +
+          "• 1.25x = Excellent\n" +
+          "• 1.0-1.24x = Acceptable\n" +
+          "• <1.0x = Rejected\n\n" +
+          "See Knowledge Base for DSCR loan details!";
+      } else if (lowerMessage.includes('calculator')) {
+        response = "🧮 **Our Calculators:**\n\n" +
+          "• Rental Analyzer (Basic & Full)\n" +
+          "• Fix & Flip Analyzer\n" +
+          "• ROI Calculator\n" +
+          "• DSCR Calculator\n" +
+          "• 1% Rule Checker\n\n" +
+          "All calculators integrate with Knowledge Base articles!";
+      } else {
+        response = "I can help you with:\n\n" +
+          "🏠 **Foreclosure Prevention** - Stop foreclosure\n" +
+          "💳 **Credit Repair** - Improve credit scores\n" +
+          "📊 **Property Analysis** - ROI, DSCR, 1% Rule\n" +
+          "💰 **Financing** - DSCR loans, private money\n" +
+          "📬 **Direct Mail** - Send campaigns\n" +
+          "📚 **Knowledge Base** - 100+ educational articles\n\n" +
+          "What would you like to learn about?";
+      }
+    }
+
+    // STEP 4: Log conversation for analytics
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await knowledgeBaseService.logAIConversation(
+          user.id,
+          userMessage,
+          response,
+          kbArticles.map(a => a.id)
+        );
+      }
+    } catch (error) {
+      consolaiResponse = await generateAIResponse(input);
+      
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: aiResponse.response,
+        timestamp: new Date(),
+        hasRealTimeData: aiResponse.hasRealTime,
+        hasKBData: aiResponse.hasKB,
+        kbArticles: aiResponse.kbArticles
     } else if (lowerMessage.includes('direct mail') || lowerMessage.includes('postcard')) {
       baseResponse = "Our direct mail system lets you send professional postcards:\n\n" +
         "📬 **Premium Users**: 100 postcards/month\n" +
@@ -139,8 +216,8 @@ export default function AIAssistant() {
   };
 
   const quickActions = [
-    { label: '🆘 Stop Foreclosure', query: 'How can I prevent foreclosure?' },
-    { label: '💳 Fix Credit', query: 'How do I improve my credit score?' },
+    { label: '🆘 What is DSCR?', query: 'What is DSCR and how does it work?' },
+    { label: '📈 1% Rule', query: 'Explain the 1% rule for rentals score?' },
     { label: '📊 Market Data', query: 'What are current market trends?' },
     { label: '💰 Cash Offer', query: 'How do I get a cash offer?' }
   ];
@@ -174,11 +251,17 @@ export default function AIAssistant() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-5 h-5" />
-                  <span className="font-bold">AI Assistant</span>
-                </div>
-                {dappierService.isConfigured() && (
-                  <span className="text-xs bg-white/20 px-2 py-1 rounded-full">
-                    Live Data
+                <div className="flex items-center gap-2">
+                  <span className="text-xs bg-white/20 px-2 py-1 rounded-full flex items-center gap-1">
+                    <BookOpen className="w-3 h-3" />
+                    KB
+                  </span>
+                  {dappierService.isConfigured() && (
+                    <span className="text-xs bg-white/20 px-2 py-1 rounded-full">
+                      Live
+                    </span>
+                  )}
+                </div>  Live Data
                   </span>
                 )}
               </div>
@@ -191,9 +274,17 @@ export default function AIAssistant() {
                   key={message.id}
                   className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div
-                    className={`max-w-[80%] rounded-2xl px-4 py-2 ${
-                      message.role === 'user'
+                  <di(message.hasRealTimeData || message.hasKBData) && (
+                      <div className="mt-2 text-xs opacity-75 flex items-center gap-2">
+                        {message.hasKBData && (
+                          <span className="flex items-center gap-1">
+                            <BookOpen className="w-3 h-3" />
+                            Knowledge Base
+                          </span>
+                        )}
+                        {message.hasRealTimeData && (
+                          <span>✓ Real-time data</span>
+                        )}
                         ? 'bg-blue-600 text-white'
                         : 'bg-gray-100 text-gray-900'
                     }`}
